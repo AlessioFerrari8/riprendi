@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "riprendi"
+dynamic = ["version"]
+description = "Resume Claude Code sessions automatically when their usage limit resets"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Alessio Ferrari" }]
+requires-python = ">=3.10"
+dependencies = []
+keywords = ["claude", "claude-code", "systemd", "cli", "rate-limit"]
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+]
+
+[project.scripts]
+riprendi = "riprendi.cli:main"
+
+[tool.setuptools]
+packages = ["riprendi"]
+
+[tool.setuptools.dynamic]
+version = { attr = "riprendi.__version__" }
