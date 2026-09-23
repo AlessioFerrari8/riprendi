@@ -1,4 +1,4 @@
-"""Lanciare la ripresa di una sessione e avvisare sul desktop."""
+"""Start the resume of a session and send desktop notifications."""
 
 import os
 import shutil
@@ -9,20 +9,20 @@ from pathlib import Path
 from .state import Tracked
 
 PROMPT = (
-    "Il limite di utilizzo si e' sbloccato: continua da dove eri rimasto. "
-    "Se il lavoro era finito, dillo e fermati."
+    "The usage limit has reset: continue from where you left off. "
+    "If the work was already finished, say so and stop."
 )
 
 
 def build_command(session_id: str) -> list[str]:
-    # `auto`: nessuno risponde alle richieste di permesso, ma le azioni rischiose restano bloccate.
+    # `auto`: nobody is there to answer permission prompts, but risky actions stay blocked.
     return ["claude", "--resume", session_id, "-p", PROMPT, "--permission-mode", "auto"]
 
 
 def start(t: Tracked, logs: Path) -> int:
-    """Avvia la ripresa in background nella cartella della sessione e ne restituisce il pid."""
+    """Start the resume in the background, in the session's folder, and return its pid."""
     if shutil.which("claude") is None:
-        raise FileNotFoundError("claude non e' nel PATH")
+        raise FileNotFoundError("claude is not on PATH")
     logs.mkdir(parents=True, exist_ok=True)
     log_path = logs / f"{t.session_id}-{datetime.now():%Y%m%d-%H%M%S}.log"
     with log_path.open("w") as log:
@@ -32,7 +32,7 @@ def start(t: Tracked, logs: Path) -> int:
             stdin=subprocess.DEVNULL,
             stdout=log,
             stderr=subprocess.STDOUT,
-            # Sessione propria: fermare il sorvegliante non deve interrompere il lavoro ripreso.
+            # Own session: stopping the watcher must not kill the resumed work.
             start_new_session=True,
         )
     return process.pid
@@ -42,7 +42,7 @@ def is_running(pid: int | None) -> bool:
     if not pid:
         return False
     try:
-        # Se e' un nostro figlio va raccolto, altrimenti resterebbe zombie e sembrerebbe vivo.
+        # If it is our child it must be reaped, or it stays a zombie and looks alive.
         done, _ = os.waitpid(pid, os.WNOHANG)
         return done == 0
     except ChildProcessError:
@@ -57,7 +57,7 @@ def is_running(pid: int | None) -> bool:
 
 
 def notify(title: str, body: str) -> None:
-    """Notifica sul desktop; se non si puo' (nessuna sessione grafica), pazienza."""
+    """Desktop notification; if that is not possible (no graphical session), never mind."""
     try:
         subprocess.run(["notify-send", "--app-name=riprendi", title, body],
                        check=False, timeout=5, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

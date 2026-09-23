@@ -32,7 +32,7 @@ class Sessions(unittest.TestCase):
         self.assertEqual(last_significant_event(path)["uuid"], "b")
 
     def test_a_half_written_last_line_is_skipped(self):
-        # Review Focus 1: Claude Code puo' star scrivendo mentre leggiamo.
+        # Claude Code may be writing while we read.
         path = write(self.projects / "p" / "s1.jsonl", [{"type": "user", "uuid": "a"}], tail='{"type": "assis')
         self.assertEqual(last_significant_event(path)["uuid"], "a")
 
@@ -45,7 +45,6 @@ class Sessions(unittest.TestCase):
         self.assertEqual(session_cwd(path), "/work/app")
 
     def test_find_session_for_cwd_picks_the_most_recent_and_ignores_subagents(self):
-        # Review Focus 4.
         old = write(self.projects / "-work-app" / "old.jsonl", [{"type": "user", "cwd": "/work/app"}])
         new = write(self.projects / "-work-app" / "new.jsonl", [{"type": "user", "cwd": "/work/app"}])
         sub = write(self.projects / "-work-app" / "new" / "subagents" / "agent-x.jsonl", [{"type": "user", "cwd": "/work/app"}])

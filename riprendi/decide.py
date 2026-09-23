@@ -1,4 +1,4 @@
-"""Che cosa fare con una sessione seguita, dato il suo ultimo evento. Nessun effetto esterno."""
+"""What to do with a followed session, given its last event. No side effects."""
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -7,51 +7,55 @@ from typing import Literal
 from .limits import FALLBACK_DELAY, is_limit_event, resume_at
 from .state import Tracked
 
-# Oltre queste riprese finite di nuovo sul limite ci si ferma: e' il caso del limite
-# mensile, che a un orario non si sblocca, e insistere consumerebbe solo tentativi.
+# Stop after this many resumes that end on the limit again: that is what a monthly
+# spending limit looks like, and it does not reset at a clock time.
 MAX_ATTEMPTS = 3
 
-STOPPED = "ferma: troppi tentativi"
+ACTIVE = "active"
+BLOCKED = "blocked"
+RESUMING = "resuming"
+STOPPED = "stopped: too many attempts"
+ERROR = "error"
 
 
 @dataclass
 class Decision:
-    kind: Literal["nulla", "attendi", "riprendi", "ferma"]
+    kind: Literal["nothing", "wait", "resume", "stop"]
     at: datetime | None = None
 
 
 def decide(t: Tracked, event: dict | None, now: datetime, running: bool) -> Decision:
-    """Aggiorna `t` e dice cosa fare. `running`: una ripresa lanciata da noi e' ancora in corso."""
-    if t.status == "errore" or running:
-        return Decision("nulla")
+    """Update `t` and say what to do. `running`: a resume we started is still going."""
+    if t.status == ERROR or running:
+        return Decision("nothing")
 
     if event is None or not is_limit_event(event):
-        # La sessione lavora (o qualcuno l'ha ripresa a mano): tutto azzerato.
-        t.status, t.attempts, t.error_uuid, t.next_at = "attiva", 0, None, None
-        return Decision("nulla")
+        # The session is working (or someone resumed it by hand): reset everything.
+        t.status, t.attempts, t.error_uuid, t.next_at = ACTIVE, 0, None, None
+        return Decision("nothing")
 
     uuid = event.get("uuid")
     if t.status == STOPPED and uuid == t.error_uuid:
-        return Decision("nulla")
+        return Decision("nothing")
 
     at = resume_at(event)
-    if t.status == "in ripresa":
-        # La ripresa e' finita ed e' ancora fermo sul limite: conta come tentativo.
+    if t.status == RESUMING:
+        # The resume ended and the session is on the limit again: that counts as an attempt.
         t.attempts += 1
         if uuid == t.error_uuid:
-            # Non ha scritto niente: si aspetta, invece di rilanciare subito.
+            # It wrote nothing: wait instead of relaunching straight away.
             at = now + FALLBACK_DELAY
     t.error_uuid = uuid
 
     if t.attempts >= MAX_ATTEMPTS:
         t.status, t.next_at = STOPPED, None
-        return Decision("ferma")
+        return Decision("stop")
 
-    if t.next_at and t.status == "bloccata":
-        # Un'attesa gia' decisa (es. la mezz'ora dopo una ripresa a vuoto) non si accorcia.
+    if t.next_at and t.status == BLOCKED:
+        # A wait already decided (e.g. half an hour after an empty resume) is never shortened.
         at = max(at, datetime.fromisoformat(t.next_at))
     t.next_at = at.isoformat()
     if now < at:
-        t.status = "bloccata"
-        return Decision("attendi", at)
-    return Decision("riprendi", at)
+        t.status = BLOCKED
+        return Decision("wait", at)
+    return Decision("resume", at)

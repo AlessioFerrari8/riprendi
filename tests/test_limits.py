@@ -5,7 +5,7 @@ from riprendi.limits import (
     FALLBACK_DELAY, RESUME_DELAY, event_time, is_limit_event, limit_text, parse_reset, resume_at,
 )
 
-# Il record vero del 2026-09-23, accorciato ai campi che contano.
+# The real record from 2026-09-23, trimmed to the fields that matter.
 REAL = {
     "type": "assistant",
     "isApiErrorMessage": True,
@@ -36,7 +36,7 @@ class LimitDetection(unittest.TestCase):
 
 
 class ResetParsing(unittest.TestCase):
-    after = datetime(2026, 9, 23, 5, 53, tzinfo=UTC)  # 07:53 a Roma
+    after = datetime(2026, 9, 23, 5, 53, tzinfo=UTC)  # 07:53 in Rome
 
     def test_hour_with_zone(self):
         self.assertEqual(parse_reset("resets 11am (Europe/Rome)", self.after), datetime(2026, 9, 23, 9, 0, tzinfo=UTC))
@@ -51,7 +51,7 @@ class ResetParsing(unittest.TestCase):
         self.assertEqual(parse_reset("resets 12am (Europe/Rome)", self.after), datetime(2026, 9, 23, 22, 0, tzinfo=UTC))
 
     def test_already_past_means_tomorrow(self):
-        # Review Focus 2: letto alle 11:30 di Roma, "11am" e' domani, non stamattina.
+        # Read at 11:30 in Rome, "11am" means tomorrow, not this morning.
         later = datetime(2026, 9, 23, 9, 30, tzinfo=UTC)
         self.assertEqual(parse_reset("resets 11am (Europe/Rome)", later), datetime(2026, 9, 24, 9, 0, tzinfo=UTC))
 

@@ -1,4 +1,4 @@
-"""Le sessioni seguite, salvate in state.json."""
+"""Followed sessions, stored in state.json."""
 
 import json
 import os
@@ -13,11 +13,11 @@ class Tracked:
     session_id: str
     path: str
     cwd: str
-    status: str = "attiva"
+    status: str = "active"
     attempts: int = 0
-    # ISO, UTC: quando e' prevista la prossima ripresa.
+    # ISO, UTC: when the next resume is due.
     next_at: str | None = None
-    # L'errore di limite su cui la sessione e' ferma: serve a capire se una ripresa ha prodotto qualcosa.
+    # The limit error the session is stopped on: tells whether a resume produced anything.
     error_uuid: str | None = None
     pid: int | None = None
 
@@ -34,5 +34,5 @@ def save(home: Path, tracked: dict[str, Tracked]) -> None:
     home.mkdir(parents=True, exist_ok=True)
     tmp = home / (STATE_FILE + ".tmp")
     tmp.write_text(json.dumps({key: asdict(value) for key, value in tracked.items()}, indent=2))
-    # Sostituzione atomica: un file di stato scritto a meta' non deve mai esistere.
+    # Atomic replace: a half-written state file must never exist.
     os.replace(tmp, home / STATE_FILE)

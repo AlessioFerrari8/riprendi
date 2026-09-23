@@ -1,4 +1,4 @@
-"""Leggere i file di sessione di Claude Code (~/.claude/projects/<cartella>/<id>.jsonl)."""
+"""Read Claude Code session files (~/.claude/projects/<folder>/<id>.jsonl)."""
 
 import json
 from pathlib import Path
@@ -8,7 +8,7 @@ _BLOCK = 256 * 1024
 
 
 def _lines_from_end(path: Path):
-    """Le righe del file dall'ultima alla prima, senza caricare tutto: le sessioni pesano decine di MB."""
+    """The file's lines from last to first, without loading it all: sessions can weigh tens of MB."""
     with path.open("rb") as handle:
         handle.seek(0, 2)
         position = handle.tell()
@@ -27,7 +27,7 @@ def _lines_from_end(path: Path):
 
 
 def last_significant_event(path: Path) -> dict | None:
-    """L'ultima riga di tipo user o assistant. Una riga scritta a meta' viene saltata."""
+    """The last user or assistant line. A half-written line is skipped."""
     if not path.is_file():
         return None
     for raw in _lines_from_end(path):
@@ -43,7 +43,7 @@ def last_significant_event(path: Path) -> dict | None:
 
 
 def session_cwd(path: Path) -> str | None:
-    """La cartella di lavoro della sessione, dalla prima riga che la riporta."""
+    """The session's working directory, from the first line that records it."""
     try:
         with path.open("r", encoding="utf-8", errors="replace") as handle:
             for raw in handle:
@@ -59,15 +59,15 @@ def session_cwd(path: Path) -> str | None:
 
 
 def _top_level_sessions(projects: Path):
-    # Solo <cartella>/<id>.jsonl: gli agenti figli stanno piu' in basso, in <id>/subagents/.
+    # Only <folder>/<id>.jsonl: subagents live further down, in <id>/subagents/.
     return projects.glob("*/*.jsonl")
 
 
 def find_session_for_cwd(cwd: str, projects: Path) -> tuple[str, Path] | None:
-    """La sessione modificata piu' di recente che lavora in `cwd`.
+    """The most recently modified session working in `cwd`.
 
-    Il nome della cartella deriva dal percorso con una regola non documentata: si
-    confronta la `cwd` scritta nel file, che e' il dato vero.
+    The folder name is derived from the path by an undocumented rule, so the `cwd`
+    recorded inside the file is compared instead: that is the real data.
     """
     target = str(Path(cwd).resolve())
     best: tuple[float, str, Path] | None = None

@@ -14,7 +14,7 @@ class Resume(unittest.TestCase):
     def test_the_command_is_exactly_the_agreed_one(self):
         self.assertEqual(resume.build_command("abc"), [
             "claude", "--resume", "abc", "-p",
-            "Il limite di utilizzo si e' sbloccato: continua da dove eri rimasto. Se il lavoro era finito, dillo e fermati.",
+            "The usage limit has reset: continue from where you left off. If the work was already finished, say so and stop.",
             "--permission-mode", "auto",
         ])
         self.assertNotIn("bypassPermissions", resume.build_command("abc"))
@@ -38,7 +38,7 @@ class Resume(unittest.TestCase):
             self.assertIn("--resume abc", log)
 
     def test_missing_claude_raises(self):
-        # Review Focus 5: il chiamante lo trasforma in stato "errore".
+        # The caller turns this into the "error" status.
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict(os.environ, {"PATH": tmp}):
                 with self.assertRaises(FileNotFoundError):
@@ -51,7 +51,7 @@ class Resume(unittest.TestCase):
 
     def test_notify_never_raises(self):
         with mock.patch.dict(os.environ, {"PATH": "/nonexistent"}):
-            resume.notify("titolo", "corpo")
+            resume.notify("title", "body")
 
 
 if __name__ == "__main__":
