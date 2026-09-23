@@ -10,10 +10,10 @@ picks them up again on its own — then tells you on the desktop.
 ```
 $ cd ~/code/my-app
 $ riprendi follow
-Following 1c5e183f-d612-441f-931b-704d1f7f2b3f (/home/you/code/my-app)
+Following 8f2c41d0-5b7e-4c3a-9e61-2d4b7a90c1f3 (/home/you/code/my-app)
 
 $ riprendi status
-1c5e183f-d612-441f-931b-704d1f7f2b3f  /home/you/code/my-app  blocked until 11:02  attempts: 0
+8f2c41d0-5b7e-4c3a-9e61-2d4b7a90c1f3  /home/you/code/my-app  blocked until 11:02  attempts: 0
 ```
 
 It does not get around the limit: it waits for it to reset, exactly like you would.
@@ -28,14 +28,14 @@ It does not get around the limit: it waits for it to reset, exactly like you wou
 ## Install
 
 ```bash
-pipx install git+https://github.com/<you>/riprendi.git
+pipx install git+https://github.com/AlessioFerrari8/riprendi.git
 riprendi install        # writes and starts ~/.config/systemd/user/riprendi.service
 ```
 
 Or from a clone, without installing the package:
 
 ```bash
-git clone https://github.com/<you>/riprendi.git && cd riprendi
+git clone https://github.com/AlessioFerrari8/riprendi.git && cd riprendi
 python3 -m riprendi install
 ```
 
